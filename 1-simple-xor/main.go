@@ -58,7 +58,9 @@ func main() {
 	// This is called the forwards pass.
 	// We do this by telling gorgonia every calculation we want to do.
 
-	// Create a bias node. This matrix will be concatenated onto each layer to add a value of one to the end of each sample
+	// Create a bias node. This matrix will be concatenated onto each layer to add a value of one to the end of each sample.
+	// When we concat, we do so on axis=1. This means we are adding a feature to each input sample.
+	// For example: if input=[[0,1],[1,0]] and bias=[[1],[1]], then Concat(1,input,bias)=[[0,1,1],[1,0,1]
 	bias := G.NewMatrix(g, G.Float64, G.WithShape(datasetLength, 1), G.WithInit(G.Ones()))
 
 	// Append the bias value of 1 to the input
