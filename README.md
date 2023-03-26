@@ -3,4 +3,4 @@ This repo is a collection of tutorials I have put together for `gorgonia`. I am 
 
 Each tutorial is just some heavily commented go files. I prefer to learn this way so thats how I've written them.
 
-To check out the gorgonia project, head on over to [gorgonia.org](gorgonia.org).
+To check out the gorgonia project, head on over to [gorgonia.org](http://gorgonia.org).
