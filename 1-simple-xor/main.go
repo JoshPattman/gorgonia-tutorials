@@ -44,7 +44,7 @@ func main() {
 	g := G.NewGraph()
 
 	// Create the input node. This is the node that we put the input data into the graph.
-	// The input data (x) is from our createXORData is a 4x2 matrix, so we create a 4x2 matrix node.
+	// The input data (x) is a 4x2 matrix, so we create a 4x2 matrix node.
 	// We don't have to actually put any data into the node yet, we can do that later.
 	input := G.NewMatrix(g, G.Float64, G.WithShape(datasetLength, numInputs))
 
