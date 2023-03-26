@@ -1,6 +1,10 @@
 package main
 
 import (
+	"encoding/gob"
+	"io"
+	"os"
+
 	G "gorgonia.org/gorgonia"
 	T "gorgonia.org/tensor"
 )
@@ -142,6 +146,56 @@ func (n *NeuralNetwork) CopyWeightsToModel(model *NeuralNetwork) {
 	// Copy the weights from this network to the model network
 	G.Let(model.hiddenLayerWeights, n.hiddenLayerWeights.Value())
 	G.Let(model.outputLayerWeights, n.outputLayerWeights.Value())
+}
+
+// Load the model from a reader. This uses the gob format.
+func (n *NeuralNetwork) Load(r io.Reader) error {
+	dec := gob.NewDecoder(r)
+	var wh, wo *T.Dense
+	wh, wo = n.hiddenLayerWeights.Value().(*T.Dense), n.outputLayerWeights.Value().(*T.Dense)
+	if err := dec.Decode(&wh); err != nil {
+		return err
+	}
+	if err := dec.Decode(&wo); err != nil {
+		return err
+	}
+	if err := G.Let(n.hiddenLayerWeights, wh); err != nil {
+		return err
+	}
+	if err := G.Let(n.outputLayerWeights, wo); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Save the model to a writer. This uses the gob format.
+func (n *NeuralNetwork) Save(r io.Writer) error {
+	enc := gob.NewEncoder(r)
+	if err := enc.Encode(n.hiddenLayerWeights.Value()); err != nil {
+		return err
+	}
+	if err := enc.Encode(n.outputLayerWeights.Value()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *NeuralNetwork) LoadFile(filename string) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return n.Load(f)
+}
+
+func (n *NeuralNetwork) SaveFile(filename string) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return n.Save(f)
 }
 
 // This function returns the nodes that we want to train.

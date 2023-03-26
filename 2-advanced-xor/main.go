@@ -52,9 +52,31 @@ func main() {
 	// This is supposed to represent that you could use this model for realtime prediction.
 	testXRaw := [][]float64{{0, 0}, {0, 1}, {1, 0}, {1, 1}}
 	testYRaw := [][]float64{{0}, {1}, {1}, {0}}
+
+	fmt.Println("\nTesting the neural net:")
 	for i := 0; i < 4; i++ {
 		testXTensor := T.New(T.WithShape(2), T.WithBacking(testXRaw[i]))
 		predictedYTensor := testingModel.PredictSingle(testXTensor)
+		fmt.Printf("Input: %v, Predicted Output: %.3f, Actual Output: %.3f\n", testXRaw[i], predictedYTensor.Data().([]float64)[0], testYRaw[i][0])
+	}
+
+	// ------------------------ Save and load the neural net ------------------------
+	// Save the model
+	if err := testingModel.SaveFile("xor_model.gob"); err != nil {
+		panic(err)
+	}
+
+	// Load the model again
+	loadedModel := NewNeuralNetwork(false)
+	if err := loadedModel.LoadFile("xor_model.gob"); err != nil {
+		panic(err)
+	}
+
+	// Predict again to check that the model was loaded correctly
+	fmt.Println("\nTesting the loaded neural net:")
+	for i := 0; i < 4; i++ {
+		testXTensor := T.New(T.WithShape(2), T.WithBacking(testXRaw[i]))
+		predictedYTensor := loadedModel.PredictSingle(testXTensor)
 		fmt.Printf("Input: %v, Predicted Output: %.3f, Actual Output: %.3f\n", testXRaw[i], predictedYTensor.Data().([]float64)[0], testYRaw[i][0])
 	}
 }
