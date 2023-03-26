@@ -54,7 +54,7 @@ func main() {
 	weightsHidden := G.NewMatrix(g, G.Float64, G.WithShape(numInputs+1, numHidden), G.WithInit(G.GlorotN(1.0)))
 	wieghtsOuput := G.NewMatrix(g, G.Float64, G.WithShape(numHidden+1, numOutputs), G.WithInit(G.GlorotN(1.0)))
 
-	// Now we will define waht happens when we want to run the neural network.
+	// Now we will define what happens when we want to run the neural network.
 	// This is called the forwards pass.
 	// We do this by telling gorgonia every calculation we want to do.
 
