@@ -53,7 +53,7 @@ func main() {
 	// We also want to add bias nodes, so the input to each layer is one larger than the output to the next layer. Later on we will append 1s to the input to each layer.
 	// Having a weight for the bias is mathematically equivalent to adding a bias vector to the layer output, but it requires fewer operations.
 	weightsHidden := G.NewMatrix(g, G.Float64, G.WithShape(numInputs+1, numHidden), G.WithInit(G.GlorotN(1.0)))
-	wieghtsOuput := G.NewMatrix(g, G.Float64, G.WithShape(numHidden+1, numOutputs), G.WithInit(G.GlorotN(1.0)))
+	weightsOutput := G.NewMatrix(g, G.Float64, G.WithShape(numHidden+1, numOutputs), G.WithInit(G.GlorotN(1.0)))
 
 	// Now we will define what happens when we want to run the neural network.
 	// This is called the forwards pass.
@@ -73,7 +73,7 @@ func main() {
 	// Append the bias value of 1 to the hidden layer
 	hiddenLayerWithBias := G.Must(G.Concat(1, hiddenLayer, bias))
 	// Multiply the hidden layer with the output weights
-	outputLayer := G.Must(G.Mul(hiddenLayerWithBias, wieghtsOuput))
+	outputLayer := G.Must(G.Mul(hiddenLayerWithBias, weightsOutput))
 	// Apply the activation function to the output layer
 	outputLayer = G.Must(G.Sigmoid(outputLayer))
 
@@ -85,10 +85,10 @@ func main() {
 
 	// Now we need to tell gorgonia how to train the neural network.
 	// First we must define where we will put the target output values.
-	// We can leave this empty for now, we will fill it in later.
+	// We can leave this empty for now, we will fill it with data later.
 	targetOutput := G.NewMatrix(g, G.Float64, G.WithShape(datasetLength, numOutputs))
 
-	// We can now define how `loss` should be calulated, which is a measure of how good the neural network is at predicting the output.
+	// We can now define how loss should be calulated, which is a measure of how good the neural network is at predicting the output.
 	// We will use the mean squared error loss function.
 	lossNode := G.Must(G.Mean(G.Must(G.Square(G.Must(G.Sub(outputLayer, targetOutput))))))
 
@@ -100,11 +100,11 @@ func main() {
 	// Finally, we need to tell gorgonia which parameters we should calculate the gradient for.
 	// This is how backpropagation works.
 	// We only want to calculate gradient with respect to the weights.
-	G.Grad(lossNode, weightsHidden, wieghtsOuput)
+	G.Grad(lossNode, weightsHidden, weightsOutput)
 
 	// ------------------------ Train the neural net ------------------------
 	// In gorgonia, a graph is a bit like a set of instructions.
-	// They say how to perform the calculations but cannot actually perform them themselves.
+	// A graph says how to perform the calculations but cannot actually perform the instructions itself.
 	// To perform the calculations, we need to create a machine.
 
 	// We are going to create a tape machine.
@@ -136,7 +136,7 @@ func main() {
 		}
 		// Now we can use the solver to update the weights.
 		// We need to give it a list of the nodes that we want to update.
-		solver.Step(G.NodesToValueGrads(G.Nodes{weightsHidden, wieghtsOuput}))
+		solver.Step(G.NodesToValueGrads(G.Nodes{weightsHidden, weightsOutput}))
 		// Finally, we can print the loss to see how it is changing.
 		fmt.Printf("Epoch: %d, Loss: %.3f\n", epoch, lossValue)
 	}
@@ -144,21 +144,30 @@ func main() {
 	// ------------------------ Test the neural net ------------------------
 	// Reset the machine to clear the previous calculations.
 	machine.Reset()
+
 	// Copy the test data into the graph.
 	G.Let(input, x)
 	// Because we are using the same graph to predict as to train, we need to supply the target output.
 	// However, if you wanted to, you could create a new graph without any of the loss nodes just for prediction.
 	G.Let(targetOutput, y)
+
 	// Run the machine.
 	if err := machine.RunAll(); err != nil {
 		panic(err)
 	}
+
+	// Lets read the output value as a tensor
+	yp := T.New(T.WithShape(outputValue.Shape()...), T.WithBacking(outputValue.Data()))
+
 	// Print the output of the neural network.
 	fmt.Println("\nPredictions:")
 	for i := 0; i < datasetLength; i++ {
+		// Get the ith row of the input matrix.
 		xi, _ := x.Slice(G.S(i, i+1))
+		// Get the value at the ith row of the output matrix.
 		yi, _ := y.At(i, 0)
-		ypi := outputValue.Data().([]float64)[i]
+		// Get the value at the ith row of the predicted output matrix.
+		ypi, _ := yp.At(i, 0)
 		fmt.Printf("X: %v, Y: %v, YP: %.2f\n", xi, yi, ypi)
 	}
 }
