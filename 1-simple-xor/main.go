@@ -51,6 +51,7 @@ func main() {
 	// Create the weight nodes. These store the weights for the neural network.
 	// We will initialise these with random values using WithInit(GolrotN())
 	// We also want to add bias nodes, so the input to each layer is one larger than the output to the next layer. Later on we will append 1s to the input to each layer.
+	// Having a weight for the bias is mathematically equivalent to adding a bias vector to the layer output, but it requires fewer operations.
 	weightsHidden := G.NewMatrix(g, G.Float64, G.WithShape(numInputs+1, numHidden), G.WithInit(G.GlorotN(1.0)))
 	wieghtsOuput := G.NewMatrix(g, G.Float64, G.WithShape(numHidden+1, numOutputs), G.WithInit(G.GlorotN(1.0)))
 
