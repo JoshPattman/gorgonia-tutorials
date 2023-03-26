@@ -33,7 +33,9 @@ func main() {
 
 	// ------------------------ Create the neural net ------------------------
 	// Define the shape of the neural network. This network will be a dense feed forward network.
-	numInputs, numHidden, numOutputs := 2, 2, 1
+	// I have chosen 5 hidden nodes, but 2 i the minimum you need to solve XOR.
+	// However, with 5 hidden nodes you are less likely to get stuck in a local minimum.
+	numInputs, numHidden, numOutputs := 2, 5, 1
 
 	// Define how many sample are in the dataset
 	datasetLength := 4
@@ -62,7 +64,8 @@ func main() {
 	// Create a bias node. This matrix will be concatenated onto each layer to add a value of one to the end of each sample.
 	// When we concat, we do so on axis=1. This means we are adding a feature to each input sample.
 	// For example: if input=[[0,1],[1,0]] and bias=[[1],[1]], then Concat(1,input,bias)=[[0,1,1],[1,0,1]
-	bias := G.NewMatrix(g, G.Float64, G.WithShape(datasetLength, 1), G.WithInit(G.Ones()))
+	// This should be a constant so that is cannot be changed during training.
+	bias := G.NewConstant(T.Ones(T.Float64, datasetLength, 1))
 
 	// Append the bias value of 1 to the input
 	inputWithBias := G.Must(G.Concat(1, input, bias))
@@ -118,9 +121,9 @@ func main() {
 	solver := G.NewAdamSolver(G.WithLearnRate(0.05))
 
 	// Now we can start training the neural network.
-	// We will show it the training data 100 times.
+	// We will show it the training data 1000 times.
 	// Each time we show it the data is known as an epoch.
-	for epoch := 0; epoch < 100; epoch++ {
+	for epoch := 0; epoch < 1000; epoch++ {
 		// First we want to reset the state of the machine, so previous calculations don't affect the current one.
 		machine.Reset()
 		// Now we can copy the input data into the graph
